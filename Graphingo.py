@@ -80,3 +80,23 @@ class Transport:
         
         for i in self.edges:
             self.edges[i] = [j for j in self.edges[i] if j['to'] != id]
+
+# this part add and remove the edges
+
+    def add_edge(self,u,v,duration,cost,transport_type,schedule=None):
+        if u in self.nodes and v in self.nodes :
+            self.edges[u].append({
+                'to':v,
+                'duration':duration,
+                'cost':cost,
+                'type':transport_type,
+                'schedule':sorted(schedule) if schedule else []
+            })
+    
+    def remove_edge(self, u, v, edge_data):
+        if u in self.edges:
+            self.edges[u] = [e for e in self.edges[u] if not (
+                e['to'] == v and 
+                e['type'] == edge_data['type'] and 
+                e['base_time'] == edge_data['base_time']
+            )]
