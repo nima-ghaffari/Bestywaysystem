@@ -110,3 +110,19 @@ class Transport:
     def clear(self):
         self.nodes = {}
         self.edges = {}
+
+
+
+# algorithms is A star / Dijkstra / BFS / maybe DFS
+
+class pathFinder:
+    def __init(self,graph):
+        self.graph = graph
+
+    def get_wait(self,time_now,schedule,transport_type):
+        if transport_type in ['walk','taxi']:
+            return 0
+        if not schedule:
+            return 0
+        
+        
