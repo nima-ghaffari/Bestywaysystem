@@ -60,3 +60,23 @@ class Heap :
     def __len__(self):
         return len(self.heap)
     
+# Logical Data Structures for algorithms
+
+class Transport:
+    def __init__(self):
+        self.nodes = dict() 
+        self.edges = dict()
+    
+    def add_node(self,id,x,y):
+        self.nodes[id] = (x,y)
+        if id not in self.edges:
+            self.edges[id] = [] 
+    
+    def remove_node(self,id):
+        if id in self.nodes:
+            del self.nodes[id]
+        if id in self.edges:
+            del self.edges[id]
+        
+        for i in self.edges:
+            self.edges[i] = [j for j in self.edges[i] if j['to'] != id]
