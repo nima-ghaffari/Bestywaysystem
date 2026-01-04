@@ -100,3 +100,13 @@ class Transport:
                 e['type'] == edge_data['type'] and 
                 e['base_time'] == edge_data['base_time']
             )]
+
+    def get_heuristic(self, u, v):
+        if u not in self.nodes or v not in self.nodes: return 0
+        x1, y1 = self.nodes[u]
+        x2, y2 = self.nodes[v]
+        return math.sqrt((x1-x2)**2 + (y1-y2)**2) * 0.1 
+
+    def clear(self):
+        self.nodes = {}
+        self.edges = {}
