@@ -51,4 +51,12 @@ class Heap :
                 small = left
             if right < length and self.heap[right] < self.heap[small]:
                 small = right 
-                
+            
+            if small == index :
+                break
+            self.heap[index],self.heap[small] = self.heap[small],self.heap[index]
+            index = small 
+    
+    def __len__(self):
+        return len(self.heap)
+    
