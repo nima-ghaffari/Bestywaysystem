@@ -741,4 +741,31 @@ class MainWindow(QMainWindow):
             else:
                 self.table_g_res.setItem(row, 1, QTableWidgetItem("Unreachable"))
                 self.table_g_res.setItem(row, 2, QTableWidgetItem("-"))
-        
+    def load_demo_map(self):
+        self.graph.clear()
+        coords = {
+            'S1': (600, 400), 
+            'S2': (600, 200), 'S3': (900, 400), 'S4': (600, 600), 'S5': (300, 400), 
+            'S6': (900, 200), 'S7': (300, 200), 'S8': (300, 600), 'S9': (900, 600)  
+        }
+        for n, pos in coords.items(): self.graph.add_node(n, pos[0], pos[1])
+        m_sch = [0, 15, 30, 45] 
+        b_sch = [5, 25, 45]     
+        for sat in ['S2', 'S3', 'S4', 'S5']:
+            self.graph.add_edge('S1', sat, 10, 2, 'metro', m_sch)
+            self.graph.add_edge(sat, 'S1', 10, 2, 'metro', m_sch)
+        outer_ring = ['S2', 'S6', 'S3', 'S9', 'S4', 'S8', 'S5', 'S7', 'S2']
+        for i in range(len(outer_ring)-1):
+            u, v = outer_ring[i], outer_ring[i+1]
+            self.graph.add_edge(u, v, 15, 1, 'bus', b_sch)
+            self.graph.add_edge(v, u, 15, 1, 'bus', b_sch)
+        for u in coords:
+            for v in coords:
+                if u != v:
+                    self.graph.add_edge(u, v, 8, 15, 'taxi', []) 
+                    dist = math.sqrt((coords[u][0]-coords[v][0])**2 + (coords[u][1]-coords[v][1])**2)
+                    if dist < 350:
+                        self.graph.add_edge(u, v, 25, 0, 'walk')
+
+        self.refresh_map()
+        self.update_combos()
