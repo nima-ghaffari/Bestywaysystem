@@ -769,3 +769,50 @@ class MainWindow(QMainWindow):
 
         self.refresh_map()
         self.update_combos()
+
+    def refresh_map(self, highlight_path=None):
+        self.scene.clear()
+        
+        edge_groups = {}
+        for u, edges in self.graph.edges.items():
+            for edge in edges:
+                v = edge['to']
+                pair = tuple(sorted((u, v))) 
+                if pair not in edge_groups:
+                    edge_groups[pair] = []
+                edge_groups[pair].append((u, v, edge))
+
+        for (u_key, v_key), edge_list in edge_groups.items():
+            count = len(edge_list)
+            u_pos = self.graph.nodes[u_key]
+            v_pos = self.graph.nodes[v_key]
+            
+            dx = v_pos[0] - u_pos[0]
+            dy = v_pos[1] - u_pos[1]
+            length = math.sqrt(dx*dx + dy*dy) or 1
+            nx = -dy / length
+            ny = dx / length            
+            spacing = 7 
+            total_width = (count - 1) * spacing
+            start_offset = -total_width / 2
+            
+            for i, (src, dst, edge_data) in enumerate(edge_list):
+                current_offset = start_offset + (i * spacing)
+                
+                X_order = nx * current_offset
+                Y_order = ny * current_offset
+                p1 = (self.graph.nodes[src][0] + X_order, self.graph.nodes[src][1] + Y_order)
+                p2 = (self.graph.nodes[dst][0] + X_order, self.graph.nodes[dst][1] + Y_order)
+                
+                self.scene.addItem(RouteItem(src, dst, p1, p2, edge_data, self))
+        if highlight_path:
+            for i in range(len(highlight_path)-1):
+                u, v = highlight_path[i], highlight_path[i+1]
+                if u in self.graph.nodes and v in self.graph.nodes:
+                    p1 = self.graph.nodes[u]
+                    p2 = self.graph.nodes[v]
+                    line = self.scene.addLine(p1[0], p1[1], p2[0], p2[1], QPen(QColor("#00ffea"), 6))
+                    line.setZValue(5)
+                    line.setOpacity(0.6)
+        for nid, (x, y) in self.graph.nodes.items():
+            self.scene.addItem(StationItem(x, y, nid, self))
