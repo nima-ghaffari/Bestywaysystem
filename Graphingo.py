@@ -556,3 +556,44 @@ class MainWindow(QMainWindow):
         layout.addWidget(btn_calc)
         layout.addWidget(self.lbl_result)
         layout.addWidget(self.table_res)
+    
+    def setup_group_tab(self):
+        layout = QVBoxLayout(self.tab_group)
+        
+        grp_add = QGroupBox("Add Traveler")
+        fl = QFormLayout()
+        self.txt_g_name = QLineEdit()
+        self.cmb_g_start = QComboBox()
+        self.spin_g_bud = QSpinBox(); self.spin_g_bud.setValue(50)
+        btn_add = QPushButton("Add")
+        btn_add.clicked.connect(self.add_traveler)
+        fl.addRow("Name:", self.txt_g_name)
+        fl.addRow("Start Node:", self.cmb_g_start)
+        fl.addRow("Budget:", self.spin_g_bud)
+        fl.addRow(btn_add)
+        grp_add.setLayout(fl)
+
+        self.list_g = QListWidget()
+
+        grp_dest = QGroupBox("Meeting Point")
+        fl2 = QFormLayout()
+        self.cmb_g_meet = QComboBox()
+        self.spin_g_time = QSpinBox(); self.spin_g_time.setRange(0, 1440); self.spin_g_time.setValue(600)
+        fl2.addRow("Meet At:", self.cmb_g_meet)
+        fl2.addRow("Global Time:", self.spin_g_time)
+        grp_dest.setLayout(fl2)
+
+        btn_solve_g = QPushButton("CALCULATE GROUP LOGISTICS")
+        btn_solve_g.clicked.connect(self.solve_group)
+        btn_solve_g.setStyleSheet("background-color: #6c5ce7;")
+
+        self.table_g_res = QTableWidget()
+        self.table_g_res.setColumnCount(3)
+        self.table_g_res.setHorizontalHeaderLabels(["Name", "Duration", "Cost"])
+        self.table_g_res.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        layout.addWidget(grp_add)
+        layout.addWidget(self.list_g)
+        layout.addWidget(grp_dest)
+        layout.addWidget(btn_solve_g)
+        layout.addWidget(self.table_g_res)
