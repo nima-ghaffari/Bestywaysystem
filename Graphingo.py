@@ -322,3 +322,42 @@ class RouteItem(QGraphicsLineItem):
         self.main_window = main_window
         self.setAcceptHoverEvents(True)
         self.update_style()
+    def update_style(self):
+        color = QColor("#7f8c8d") 
+        width = 2
+        style = Qt.SolidLine
+        etype = self.edge_data['type']
+        
+        if etype == 'metro': color = QColor("#3498db") 
+        elif etype == 'bus': color = QColor("#e74c3c") 
+        elif etype == 'taxi': color = QColor("#f1c40f") 
+        elif etype == 'walk': 
+            color = QColor("#2ecc71") 
+            style = Qt.DashLine
+        self.pen_normal = QPen(color, width, style)
+        self.pen_hover = QPen(QColor("#ffffff"), 4, style) 
+        self.setPen(self.pen_normal)
+        sched_txt = "Anytime"
+        if self.edge_data['schedule']:
+            sched_txt = ",".join(map(str, self.edge_data['schedule'][:3])) + "..."
+        tooltip = (f"Mode: {etype.upper()}\n"
+                   f"Time: {self.edge_data['base_time']} min\n"
+                   f"Cost: ${self.edge_data['cost']}\n"
+                   f"Sched: {sched_txt}")
+        self.setToolTip(tooltip)
+    def hoverEnterEvent(self, event):
+        self.setPen(self.pen_hover)
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.setPen(self.pen_normal)
+        super().hoverLeaveEvent(event)
+
+    def contextMenuEvent(self, event):
+        menu = QMenu()
+        del_action = menu.addAction("Remove Route")
+        action = menu.exec_(event.screenPos())
+        if action == del_action:
+            self.main_window.graph.remove_edge(self.u, self.v, self.edge_data)
+            self.main_window.refresh_map()
+            
