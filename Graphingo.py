@@ -447,7 +447,7 @@ class MapScene(QGraphicsScene):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("ProTransit - S1 System")
+        self.setWindowTitle("BEST WAY SYSTEM")
         self.resize(1200, 800)
         self.setStyleSheet("""
             QMainWindow, QWidget { background-color: #2f3640; color: #f5f6fa; font-family: 'Segoe UI', Arial; font-size: 14px; }
@@ -741,3 +741,4 @@ class MainWindow(QMainWindow):
             else:
                 self.table_g_res.setItem(row, 1, QTableWidgetItem("Unreachable"))
                 self.table_g_res.setItem(row, 2, QTableWidgetItem("-"))
+        
