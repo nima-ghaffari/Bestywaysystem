@@ -115,7 +115,7 @@ class Transport:
 
 # algorithms is A star / Dijkstra / BFS / maybe DFS
 
-class pathFinder:
+class PathFinder:
     def __init(self,graph):
         self.graph = graph
 
@@ -461,3 +461,20 @@ class MainWindow(QMainWindow):
             QTabBar::tab { background: #353b48; color: #bdc3c7; padding: 10px; margin-right: 2px; }
             QTabBar::tab:selected { background: #0984e3; color: white; }
         """)
+        self.graph = Transport()
+        self.finder = PathFinder(self.graph)
+        self.group_travelers = [] 
+
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        main_layout = QHBoxLayout(main_widget)
+        self.sidebar = QTabWidget()
+        self.sidebar.setFixedWidth(420)
+        
+        self.tab_route = QWidget(); self.setup_route_tab()
+        self.tab_group = QWidget(); self.setup_group_tab()
+        self.tab_build = QWidget(); self.setup_build_tab()
+        
+        self.sidebar.addTab(self.tab_route, "Routing")
+        self.sidebar.addTab(self.tab_group, "Group Mode")
+        self.sidebar.addTab(self.tab_build, "Map Builder")
