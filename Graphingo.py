@@ -411,3 +411,36 @@ class AddEdgeDialog(QDialog):
             try: schedule = [int(x.strip()) for x in sched_str.split(',')]
             except: pass 
         return {'type': ctype, 'duration': self.spin_duration.value(), 'cost': self.spin_cost.value(), 'schedule': schedule}
+    
+#Map Loading
+class MapScene(QGraphicsScene):
+    def __init__(self, main_window):
+        super().__init__()
+        self.main_window = main_window
+        self.mode = "view"
+        self.grid_size = 50
+        self.setBackgroundBrush(QBrush(QColor("#082841")))
+
+    def drawBackground(self, painter, rect):
+        super().drawBackground(painter, rect)
+        painter.setPen(QPen(QColor("#1d57d4"), 1, Qt.DotLine))
+        left = int(rect.left()) - (int(rect.left()) % self.grid_size)
+        top = int(rect.top()) - (int(rect.top()) % self.grid_size)
+        x = left
+        while x < rect.right():
+            painter.drawLine(x, int(rect.top()), x, int(rect.bottom()))
+            x += self.grid_size
+        y = top
+        while y < rect.bottom():
+            painter.drawLine(int(rect.left()), y, int(rect.right()), y)
+            y += self.grid_size
+
+    def mousePressEvent(self, event):
+        if self.mode == "edit" and event.button() == Qt.LeftButton:
+            pos = event.scenePos()
+            if not self.itemAt(pos, self.views()[0].transform()):
+                self.main_window.add_node_visual(pos.x(), pos.y())
+        super().mousePressEvent(event)
+
+
+# The main window done set.
