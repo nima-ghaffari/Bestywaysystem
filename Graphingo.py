@@ -87,7 +87,7 @@ class Transport:
         if u in self.nodes and v in self.nodes :
             self.edges[u].append({
                 'to':v,
-                'duration':duration,
+                'base_time': duration, # FIXED: Changed from 'duration' to 'base_time' to match logic
                 'cost':cost,
                 'type':transport_type,
                 'schedule':sorted(schedule) if schedule else []
@@ -116,10 +116,11 @@ class Transport:
 # algorithms is A star / Dijkstra / BFS / maybe DFS
 
 class PathFinder:
-    def __init(self,graph):
+    def __init__(self,graph):
         self.graph = graph
 
-    def get_wait(self,time_now,schedule,transport_type):
+    # Renamed from get_wait to get_wait_time to match usage calls
+    def get_wait_time(self,time_now,schedule,transport_type):
         if transport_type in ['walk','taxi']:
             return 0
         if not schedule:
@@ -131,19 +132,23 @@ class PathFinder:
                 return i - time_now
         
         return (1440 - time) + schedule[0]
+
     def solve(self, start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, algorithm='dijkstra', objective='fastest'):
         if start not in self.graph.nodes or end not in self.graph.nodes:
             return None 
             
         if algorithm == 'bfs':
             return self._bfs(start, end, start_time, budget, traffic_factor, allowed_modes)
+        elif algorithm == 'astar':
+            return self._astar(start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, objective)
         else:
-            use_heuristic = (algorithm == 'astar')
-            return self._dijkstra_astar(start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, objective, use_heuristic)
+            return self._dijkstra(start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, objective)
 
-    def _dijkstra_astar(self, start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, objective, use_heuristic):
+    # Separated Dijkstra Algorithm
+    def _dijkstra(self, start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, objective):
         push_count = 0
         pq = Heap()
+        # Priority is just the current cost/time (g_score)
         pq.push((0, start_time, 0, push_count, start, []))
         
         visited = {} 
@@ -152,8 +157,11 @@ class PathFinder:
 
         while len(pq) > 0:
             score, curr_time, curr_cost, _, u, path_history = pq.pop()
+            
             if max_duration > 0 and (curr_time - start_time) > max_duration:
                 continue
+            
+            # Metric tracking
             if objective == 'fastest':
                 current_metric = curr_time
             elif objective == 'cheapest':
@@ -203,8 +211,91 @@ class PathFinder:
                     walk_penalty = 1000 if e_type == 'walk' else 0
                     g_score = score + walk_penalty
 
+                step_detail = {
+                    'from': u, 'to': v, 'type': e_type,
+                    'wait': wait_time, 'travel': travel_time,
+                    'cost': final_edge_cost, 'arrival': arrival_time
+                }
+
+                push_count += 1
+                # For Dijkstra, f_score is just g_score (no heuristic)
+                pq.push((g_score, arrival_time, new_cost, push_count, v, path_history + [step_detail]))
+
+        return best_result
+
+    # Separated A* Algorithm
+    def _astar(self, start, end, start_time, budget, traffic_factor, allowed_modes, max_duration, objective):
+        push_count = 0
+        pq = Heap()
+        # Initial heuristic
+        h_start = 0
+        if objective == 'fastest':
+            h_start = self.graph.get_heuristic(start, end)
+        
+        pq.push((h_start, start_time, 0, push_count, start, []))
+        
+        visited = {} 
+        min_final_metric = float('inf')
+        best_result = None
+
+        while len(pq) > 0:
+            f_score_curr, curr_time, curr_cost, _, u, path_history = pq.pop()
+            
+            if max_duration > 0 and (curr_time - start_time) > max_duration:
+                continue
+            
+            if objective == 'fastest':
+                current_metric = curr_time
+            elif objective == 'cheapest':
+                current_metric = curr_cost
+            else: 
+                current_metric = sum(1 for step in path_history if step['type'] == 'walk') * 100 
+
+            # A* visited logic can be complex, here we use simple closed set based on metric
+            if u in visited and visited[u] <= current_metric:
+                continue
+            visited[u] = current_metric
+
+            if u == end:
+                if current_metric < min_final_metric:
+                    min_final_metric = current_metric
+                    best_result = (path_history, curr_time, curr_cost)
+                continue
+
+            if u not in self.graph.edges: continue
+
+            for edge in self.graph.edges[u]:
+                v = edge['to']
+                e_type = edge['type']
+                
+                if e_type not in allowed_modes: continue
+                speed_multiplier = 1.0
+                cost_multiplier = 1.0
+                if e_type == 'taxi':
+                    speed_multiplier = traffic_factor 
+                    cost_multiplier = traffic_factor  
+                elif e_type == 'bus':
+                    speed_multiplier = 1.0 + (traffic_factor - 1.0) * 0.3 
+
+                travel_time = edge['base_time'] * speed_multiplier
+                final_edge_cost = edge['cost'] * cost_multiplier
+
+                if curr_cost + final_edge_cost > budget:
+                    continue 
+
+                wait_time = self.get_wait_time(curr_time, edge['schedule'], e_type)
+                arrival_time = curr_time + wait_time + travel_time
+                new_cost = curr_cost + final_edge_cost
+                
+                g_score = 0
+                if objective == 'fastest': g_score = arrival_time
+                elif objective == 'cheapest': g_score = new_cost
+                elif objective == 'least_walking': 
+                    walk_penalty = 1000 if e_type == 'walk' else 0
+                    g_score = f_score_curr - h_start + walk_penalty # Approximate for mixed
+
                 h_score = 0
-                if use_heuristic and objective == 'fastest':
+                if objective == 'fastest':
                     h_score = self.graph.get_heuristic(v, end)
                     
                 f_score = g_score + h_score
@@ -220,7 +311,8 @@ class PathFinder:
 
         return best_result
 
-def _bfs(self, start, end, start_time, budget, traffic_factor, allowed_modes):
+    # Fixed Indentation for BFS
+    def _bfs(self, start, end, start_time, budget, traffic_factor, allowed_modes):
         queue = deque([(start, [start])])
         visited_hops = {start}
         shortest_path_nodes = None
@@ -816,3 +908,19 @@ class MainWindow(QMainWindow):
                     line.setOpacity(0.6)
         for nid, (x, y) in self.graph.nodes.items():
             self.scene.addItem(StationItem(x, y, nid, self))
+    def update_combos(self):
+        nodes = sorted(list(self.graph.nodes.keys()))
+        # Fixed: Changed cmb_g_start to cmb_starting
+        for c in [self.cmb_start, self.cmb_end, self.cmb_b_from, self.cmb_b_to, self.cmb_starting, self.cmb_g_meet]:
+            c.clear(); c.addItems(nodes)
+        
+    def clear_map(self):
+        self.graph.clear()
+        self.refresh_map()
+        self.update_combos()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
