@@ -519,3 +519,40 @@ class MainWindow(QMainWindow):
         self.spin_traffic = QDoubleSpinBox(); self.spin_traffic.setRange(1.0, 5.0); self.spin_traffic.setValue(1.0); self.spin_traffic.setSingleStep(0.1)
         hl_t.addWidget(self.spin_traffic)
         vl.addLayout(hl_t)
+        hl_m = QHBoxLayout(); 
+        self.chk_metro = QCheckBox("Metro"); self.chk_metro.setChecked(True)
+        self.chk_bus = QCheckBox("Bus"); self.chk_bus.setChecked(True)
+        self.chk_taxi = QCheckBox("Taxi"); self.chk_taxi.setChecked(True)
+        self.chk_walk = QCheckBox("Walk"); self.chk_walk.setChecked(True)
+        for c in [self.chk_metro, self.chk_bus, self.chk_taxi, self.chk_walk]: hl_m.addWidget(c)
+        vl.addLayout(hl_m)
+
+        self.cmb_algo = QComboBox(); self.cmb_algo.addItems(["Dijkstra (Optimal)", "A* Search (Heuristic)", "BFS (Min Hops)"])
+        self.cmb_obj = QComboBox()
+        self.cmb_obj.addItems(["Fastest Time", "Cheapest Cost", "Least Walking"])
+        
+        vl.addWidget(QLabel("Algorithm:"))
+        vl.addWidget(self.cmb_algo)
+        vl.addWidget(QLabel("Optimization Basis:"))
+        vl.addWidget(self.cmb_obj)
+        grp_sets.setLayout(vl)
+
+        btn_calc = QPushButton("FIND BEST ROUTE")
+        btn_calc.clicked.connect(self.calculate_route)
+        btn_calc.setStyleSheet("background-color: #00b894; font-weight: bold; padding: 12px;")
+
+        self.lbl_result = QLabel("Ready.")
+        self.lbl_result.setAlignment(Qt.AlignCenter)
+        self.lbl_result.setStyleSheet("color: #fab1a0; font-weight: bold;")
+
+        self.table_res = QTableWidget()
+        self.table_res.setColumnCount(4)
+        self.table_res.setHorizontalHeaderLabels(["From->To", "Type", "Wait/Ride", "Arr Time"])
+        self.table_res.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table_res.verticalHeader().setVisible(False)
+
+        layout.addWidget(grp_trip)
+        layout.addWidget(grp_sets)
+        layout.addWidget(btn_calc)
+        layout.addWidget(self.lbl_result)
+        layout.addWidget(self.table_res)
