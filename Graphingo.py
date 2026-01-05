@@ -360,4 +360,54 @@ class RouteItem(QGraphicsLineItem):
         if action == del_action:
             self.main_window.graph.remove_edge(self.u, self.v, self.edge_data)
             self.main_window.refresh_map()
-            
+
+# The State ment of edge for u to v example of this .
+class AddEdgeDialog(QDialog):
+    def __init__(self, u, v, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(f"Connect {u} -> {v}")
+        self.resize(300, 200)
+        layout = QFormLayout(self)
+
+        self.cmb_type = QComboBox()
+        self.cmb_type.addItems(["metro", "bus", "taxi", "walk"])
+        self.cmb_type.currentTextChanged.connect(self.update_defaults)
+        
+        self.spin_duration = QSpinBox()
+        self.spin_duration.setRange(1, 1000); self.spin_duration.setValue(10)
+        self.spin_cost = QSpinBox()
+        self.spin_cost.setRange(0, 100000); self.spin_cost.setValue(2)
+        
+        self.txt_schedule = QLineEdit()
+        self.txt_schedule.setPlaceholderText("Mins (e.g. 0, 15, 30)")
+        
+        layout.addRow("Type:", self.cmb_type)
+        layout.addRow("Duration (min):", self.spin_duration)
+        layout.addRow("Cost ($):", self.spin_cost)
+        layout.addRow("Schedule:", self.txt_schedule)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addRow(buttons)
+        self.update_defaults()
+
+    def update_defaults(self):
+        ctype = self.cmb_type.currentText()
+        if ctype == "walk":
+            self.spin_cost.setValue(0); self.spin_cost.setEnabled(False)
+            self.txt_schedule.clear(); self.txt_schedule.setEnabled(False)
+        elif ctype == "taxi":
+            self.spin_cost.setValue(20); self.spin_cost.setEnabled(True)
+            self.txt_schedule.clear(); self.txt_schedule.setEnabled(False)
+        else:
+            self.spin_cost.setEnabled(True); self.txt_schedule.setEnabled(True)
+
+    def get_data(self):
+        sched_str = self.txt_schedule.text().strip()
+        ctype = self.cmb_type.currentText()
+        schedule = []
+        if ctype not in ['taxi', 'walk'] and sched_str:
+            try: schedule = [int(x.strip()) for x in sched_str.split(',')]
+            except: pass 
+        return {'type': ctype, 'duration': self.spin_duration.value(), 'cost': self.spin_cost.value(), 'schedule': schedule}
