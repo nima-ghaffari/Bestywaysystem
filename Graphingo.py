@@ -694,3 +694,19 @@ class MainWindow(QMainWindow):
             dur = f_time - start_t
             self.lbl_result.setText(f"Total: {dur:.0f} min | ${f_cost:.1f} | Arr: {self.format_time(f_time)}")
             self.lbl_result.setStyleSheet("color: #55efc4; font-weight: bold; font-size: 16px;")
+            path_nodes = []
+            self.table_res.setRowCount(len(path))
+            for i, step in enumerate(path):
+                path_nodes.append(step['from'])
+                if i == len(path)-1: path_nodes.append(step['to'])
+                
+                self.table_res.setItem(i, 0, QTableWidgetItem(f"{step['from']} -> {step['to']}"))
+                self.table_res.setItem(i, 1, QTableWidgetItem(step['type'].upper()))
+                self.table_res.setItem(i, 2, QTableWidgetItem(f"W:{step['wait']}m | R:{step['travel']:.0f}m"))
+                self.table_res.setItem(i, 3, QTableWidgetItem(self.format_time(step['arrival'])))
+            
+            self.refresh_map(highlight_path=path_nodes)
+        else:
+            self.lbl_result.setText("No Path Found (Check Budget or Connectivity)")
+            self.lbl_result.setStyleSheet("color: #ff7675; font-weight: bold;")
+            self.refresh_map()
