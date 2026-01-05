@@ -478,3 +478,44 @@ class MainWindow(QMainWindow):
         self.sidebar.addTab(self.tab_route, "Routing")
         self.sidebar.addTab(self.tab_group, "Group Mode")
         self.sidebar.addTab(self.tab_build, "Map Builder")
+        # Graphics Scene
+        self.scene = MapScene(self)
+        self.map_view = QGraphicsView(self.scene)
+        self.map_view.setRenderHint(QPainter.Antialiasing)
+        self.map_view.setDragMode(QGraphicsView.ScrollHandDrag)
+
+        main_layout.addWidget(self.sidebar)
+        main_layout.addWidget(self.map_view, 1)
+
+        self.load_demo_map()
+
+    def format_time(self, mins):
+        h = int(mins // 60) % 24
+        m = int(mins % 60)
+        return f"{h:02d}:{m:02d}"
+
+    def setup_route_tab(self):
+        layout = QVBoxLayout(self.tab_route)
+        
+        grp_trip = QGroupBox("Trip Details")
+        fl = QFormLayout()
+        self.cmb_start = QComboBox()
+        self.cmb_end = QComboBox()
+        self.spin_time = QSpinBox(); self.spin_time.setRange(0, 1440); self.spin_time.setValue(480) 
+        self.spin_time.setSuffix(" min (Time of Day)")
+        self.spin_budget = QSpinBox(); self.spin_budget.setRange(0, 10000); self.spin_budget.setValue(50); self.spin_budget.setSuffix(" $")
+        
+        fl.addRow("Origin:", self.cmb_start)
+        fl.addRow("Destination:", self.cmb_end)
+        fl.addRow("Start Time:", self.spin_time)
+        fl.addRow("Max Budget:", self.spin_budget)
+        grp_trip.setLayout(fl)
+
+        grp_sets = QGroupBox("Settings & Objective")
+        vl = QVBoxLayout()
+        
+        hl_t = QHBoxLayout()
+        hl_t.addWidget(QLabel("Traffic Factor:"))
+        self.spin_traffic = QDoubleSpinBox(); self.spin_traffic.setRange(1.0, 5.0); self.spin_traffic.setValue(1.0); self.spin_traffic.setSingleStep(0.1)
+        hl_t.addWidget(self.spin_traffic)
+        vl.addLayout(hl_t)
