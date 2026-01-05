@@ -597,3 +597,34 @@ class MainWindow(QMainWindow):
         layout.addWidget(grp_dest)
         layout.addWidget(btn_solve_g)
         layout.addWidget(self.table_g_res)
+
+    def setup_build_tab(self):
+        layout = QVBoxLayout(self.tab_build)
+        
+        self.btn_edit_mode = QPushButton("Enable Edit Mode (Click on Map)")
+        self.btn_edit_mode.setCheckable(True)
+        self.btn_edit_mode.toggled.connect(self.toggle_edit_mode)
+
+        grp_conn = QGroupBox("Add Connection")
+        fl = QFormLayout()
+        self.cmb_b_from = QComboBox()
+        self.cmb_b_to = QComboBox()
+        btn_conn = QPushButton("Connect Nodes")
+        btn_conn.clicked.connect(self.manual_connect)
+        fl.addRow("From:", self.cmb_b_from)
+        fl.addRow("To:", self.cmb_b_to)
+        fl.addRow(btn_conn)
+        grp_conn.setLayout(fl)
+
+        btn_clear = QPushButton("Clear Map")
+        btn_clear.clicked.connect(self.clear_map)
+        btn_clear.setStyleSheet("background-color: #d63031;")
+        
+        btn_demo = QPushButton("Reload Demo Map (S1, S2...)")
+        btn_demo.clicked.connect(self.load_demo_map)
+
+        layout.addWidget(self.btn_edit_mode)
+        layout.addWidget(grp_conn)
+        layout.addStretch()
+        layout.addWidget(btn_demo)
+        layout.addWidget(btn_clear)
