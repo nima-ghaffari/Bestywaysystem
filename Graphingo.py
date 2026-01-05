@@ -562,13 +562,13 @@ class MainWindow(QMainWindow):
         
         grp_add = QGroupBox("Add Traveler")
         fl = QFormLayout()
-        self.txt_g_name = QLineEdit()
-        self.cmb_g_start = QComboBox()
+        self.txt_name = QLineEdit()
+        self.cmb_starting = QComboBox()
         self.spin_g_bud = QSpinBox(); self.spin_g_bud.setValue(50)
         btn_add = QPushButton("Add")
         btn_add.clicked.connect(self.add_traveler)
-        fl.addRow("Name:", self.txt_g_name)
-        fl.addRow("Start Node:", self.cmb_g_start)
+        fl.addRow("Name:", self.txt_name)
+        fl.addRow("Start Node:", self.cmb_starting)
         fl.addRow("Budget:", self.spin_g_bud)
         fl.addRow(btn_add)
         grp_add.setLayout(fl)
@@ -710,3 +710,34 @@ class MainWindow(QMainWindow):
             self.lbl_result.setText("No Path Found (Check Budget or Connectivity)")
             self.lbl_result.setStyleSheet("color: #ff7675; font-weight: bold;")
             self.refresh_map()
+
+    def add_traveler(self):
+        name = self.txt_name.text()
+        start = self.cmb_starting.currentText()
+        if name and start:
+            self.group_travelers.append({'name': name, 'start': start, 'budget': self.spin_g_bud.value()})
+            self.list_g.addItem(f"{name} (From: {start}, Bud: {self.spin_g_bud.value()})")
+            self.txt_name.clear()
+    def solve_group(self):
+        meet = self.cmb_g_meet.currentText()
+        self.table_g_res.setRowCount(0)
+        modes = ["metro", "bus", "taxi", "walk"]
+        
+        for p in self.group_travelers:
+            res = self.finder.solve(
+                p['start'], meet, 
+                self.spin_g_time.value(), p['budget'], 
+                1.0, modes, 0, 'dijkstra', 'fastest'
+            )
+            row = self.table_g_res.rowCount()
+            self.table_g_res.insertRow(row)
+            self.table_g_res.setItem(row, 0, QTableWidgetItem(p['name']))
+            
+            if res:
+                path, f_time, f_cost = res
+                dur = f_time - self.spin_g_time.value()
+                self.table_g_res.setItem(row, 1, QTableWidgetItem(f"{dur:.0f} min"))
+                self.table_g_res.setItem(row, 2, QTableWidgetItem(f"${f_cost:.1f}"))
+            else:
+                self.table_g_res.setItem(row, 1, QTableWidgetItem("Unreachable"))
+                self.table_g_res.setItem(row, 2, QTableWidgetItem("-"))
