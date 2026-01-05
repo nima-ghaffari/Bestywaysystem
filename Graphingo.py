@@ -444,3 +444,20 @@ class MapScene(QGraphicsScene):
 
 
 # The main window done set.
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ProTransit - S1 System")
+        self.resize(1200, 800)
+        self.setStyleSheet("""
+            QMainWindow, QWidget { background-color: #2f3640; color: #f5f6fa; font-family: 'Segoe UI', Arial; font-size: 14px; }
+            QPushButton { background-color: #0984e3; border: none; padding: 8px; border-radius: 4px; color: white; }
+            QPushButton:hover { background-color: #74b9ff; }
+            QGroupBox { border: 1px solid #7f8c8d; border-radius: 5px; margin-top: 10px; padding-top: 10px; font-weight: bold; }
+            QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #00d2d3; }
+            QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox { background-color: #353b48; border: 1px solid #718093; color: white; padding: 4px; border-radius: 3px; }
+            QTableWidget { background-color: #353b48; border: none; gridline-color: #718093; }
+            QHeaderView::section { background-color: #2f3640; padding: 4px; border: 1px solid #718093; }
+            QTabBar::tab { background: #353b48; color: #bdc3c7; padding: 10px; margin-right: 2px; }
+            QTabBar::tab:selected { background: #0984e3; color: white; }
+        """)
