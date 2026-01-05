@@ -620,7 +620,7 @@ class MainWindow(QMainWindow):
         btn_clear.clicked.connect(self.clear_map)
         btn_clear.setStyleSheet("background-color: #d63031;")
         
-        btn_demo = QPushButton("Reload Demo Map (S1, S2...)")
+        btn_demo = QPushButton("Defaulte map")
         btn_demo.clicked.connect(self.load_demo_map)
 
         layout.addWidget(self.btn_edit_mode)
@@ -628,3 +628,69 @@ class MainWindow(QMainWindow):
         layout.addStretch()
         layout.addWidget(btn_demo)
         layout.addWidget(btn_clear)
+
+    def toggle_edit_mode(self, active):
+        self.scene.mode = "edit" if active else "view"
+        self.btn_edit_mode.setText("Stop Editing" if active else "Enable Edit Mode (Click on Map)")
+        self.btn_edit_mode.setStyleSheet(f"background-color: {"#044b16" if active else "#05375e"};")
+        self.map_view.setDragMode(QGraphicsView.NoDrag if active else QGraphicsView.ScrollHandDrag)
+    def add_node_visual(self, x, y):
+        index = 1
+        while f"S{index}" in self.graph.nodes: index += 1
+        nid = f"S{index}"
+        self.graph.add_node(nid, x, y)
+        self.refresh_map()
+        self.update_combos()
+
+    def delete_node_action(self, id):
+        self.graph.remove_node(id)
+        self.refresh_map()
+        self.update_combos()
+
+    def manual_connect(self):
+        u, v = self.cmb_b_from.currentText(), self.cmb_b_to.currentText()
+        if u and v and u != v:
+            dlg = AddEdgeDialog(u, v, self)
+            if dlg.exec_() == QDialog.Accepted:
+                d = dlg.get_data()
+                self.graph.add_edge(u, v, d['duration'], d['cost'], d['type'], d['schedule'])
+                if d['type'] in ['walk', 'taxi']:
+                    self.graph.add_edge(v, u, d['duration'], d['cost'], d['type'], d['schedule'])
+                self.refresh_map()
+
+    def calculate_route(self):
+        self.table_res.setRowCount(0)
+        statement, edge = self.cmb_start.currentText(), self.cmb_end.currentText()
+        if not statement or not edge: return
+
+        # Settings
+        modes = []
+        if self.chk_metro.isChecked(): modes.append("metro")
+        if self.chk_bus.isChecked(): modes.append("bus")
+        if self.chk_taxi.isChecked(): modes.append("taxi")
+        if self.chk_walk.isChecked(): modes.append("walk")
+
+        algo_map = {"Dijkstra (Optimal)": "dijkstra", "A* Search (Heuristic)": "astar", "BFS (Min Hops)": "bfs"}
+        algo = algo_map[self.cmb_algo.currentText()]
+        
+        obj_map = {"Fastest Time": "fastest", "Cheapest Cost": "cheapest", "Least Walking": "least_walking"}
+        obj = obj_map[self.cmb_obj.currentText()]
+
+        start_t = self.spin_time.value()
+        
+        result = self.finder.solve(
+            statement, edge, 
+            start_time=start_t,
+            budget=self.spin_budget.value(),
+            traffic_factor=self.spin_traffic.value(),
+            allowed_modes=modes,
+            max_duration=0, 
+            algorithm=algo,
+            objective=obj
+        )
+
+        if result:
+            path, f_time, f_cost = result
+            dur = f_time - start_t
+            self.lbl_result.setText(f"Total: {dur:.0f} min | ${f_cost:.1f} | Arr: {self.format_time(f_time)}")
+            self.lbl_result.setStyleSheet("color: #55efc4; font-weight: bold; font-size: 16px;")
