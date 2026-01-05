@@ -280,3 +280,45 @@ def _bfs(self, start, end, start_time, budget, traffic_factor, allowed_modes):
             })
 
         return (path_history, curr_time, curr_cost)
+
+
+# GUI 
+class StationItem(QGraphicsEllipseItem):
+    def __init__(self, x, y, id, main_window, radius=20):
+        super().__init__(x - radius, y - radius, radius * 2, radius * 2)
+        self.id = id
+        self.main_window = main_window
+        
+        gradient = QColor("#0a2a4b")
+        self.setBrush(QBrush(gradient)) 
+        self.setPen(QPen(QColor("#ecf0f1"), 2))  
+        self.setZValue(10)
+        self.setAcceptHoverEvents(True)
+        self.setToolTip(f"Station: {id}\n(Right-Click to delete)")
+
+    def paint(self, painter, option, widget):
+        super().paint(painter, option, widget)
+        painter.setPen(Qt.white)
+        font = QFont("Berlin sans FB Demi", 10, QFont.Bold)
+        painter.setFont(font)
+        rect = self.boundingRect()
+        text = self.id
+        fm = QFontMetrics(font)
+        w = fm.width(text)
+        painter.drawText(int(rect.center().x() - w/2), int(rect.center().y() + 4), text)
+    def contextMenuEvent(self, event):
+        menu = QMenu()
+        del_action = menu.addAction(f"Delete Station {self.id}")
+        action = menu.exec_(event.screenPos())
+        if action == del_action:
+            self.main_window.delete_node_action(self.id)
+
+class RouteItem(QGraphicsLineItem):
+    def __init__(self, u, v, u_pos, v_pos, edge_data, main_window):
+        super().__init__(QLineF(u_pos[0], u_pos[1], v_pos[0], v_pos[1]))
+        self.edge_data = edge_data
+        self.u = u
+        self.v = v
+        self.main_window = main_window
+        self.setAcceptHoverEvents(True)
+        self.update_style()
